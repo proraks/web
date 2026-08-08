@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Node.js
+**/node_modules/
+**/dist/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Rust
+**/target/
+**/*.rs.bk
+**/Cargo.lock.visual
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
