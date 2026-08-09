@@ -16,10 +16,12 @@ fn err(status: StatusCode, msg: impl Into<String>) -> Response {
 
 #[derive(Deserialize)]
 pub struct ListParams {
-    pub kind: Option<String>,
+    pub kind: Option<Kind>,
 }
 
-/// GET /api/entries?kind=book|short_text
+/// GET /api/entries          — all read entries
+/// GET /api/entries?kind=book
+/// GET /api/entries?kind=short_text
 /// Public: only ever returns entries with status = 'read'.
 pub async fn list_entries(
     State(state): State<AppState>,
@@ -33,7 +35,7 @@ pub async fn list_entries(
                        (c.id IS NOT NULL AND c.is_published = TRUE) AS has_commentary
                 FROM entries e
                 LEFT JOIN commentaries c ON c.entry_id = e.id
-                WHERE e.status = 'read' AND e.kind = $1::kind
+                WHERE e.status = 'read' AND e.kind = $1
                 ORDER BY e.read_at DESC, e.created_at DESC
                 "#,
             )
