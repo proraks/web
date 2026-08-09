@@ -36,33 +36,16 @@ async fn main() {
     // CORS is irrelevant there. CORS_ORIGIN is kept as a single-origin alias.
     let raw_cors = std::env::var("CORS_ORIGINS")
         .or_else(|_| std::env::var("CORS_ORIGIN"))
-        .unwrap_or_else(|_| "http://localhost:5173".to_string());
-    let cors_origins: Vec<String> = raw_cors
+        .unwrap_or_else(|_| "https://remark.ralfjka.sk".to_string());
+    let cors_origins: Vec<HeaderValue> = raw_cors
         .split(',')
         .map(str::trim)
         .filter(|s| !s.is_empty())
-        .map(ToOwned::to_owned)
+        .filter_map(|origin| origin.parse::<HeaderValue>().ok())
         .collect();
 
-    let pool = db::connect(&database_url)
-        .await
-        .expect("failed to connect to database");
-
-    let state = AppState {
-        db: pool,
-        admin_password_hash,
-        session_secret,
-    };
-
     let cors = CorsLayer::new()
-        .allow_origin(AllowOrigin::predicate(
-            move |origin: &HeaderValue, _parts: &Parts| {
-                origin
-                    .to_str()
-                    .map(|o| cors_origins.iter().any(|allowed| origin_allowed(o, allowed)))
-                    .unwrap_or(false)
-            },
-        ))
+        .allow_origin(AllowOrigin::list(cors_origins))  // Use list instead of predicate
         .allow_methods([
             axum::http::Method::GET,
             axum::http::Method::POST,
@@ -73,6 +56,16 @@ async fn main() {
         ])
         .allow_headers([axum::http::header::CONTENT_TYPE])
         .allow_credentials(true);
+
+    let pool = db::connect(&database_url)
+        .await
+        .expect("failed to connect to database");
+
+    let state = AppState {
+        db: pool,
+        admin_password_hash,
+        session_secret,
+    };
 
     let app = Router::new()
         .route("/health", get(|| async { "OK" }))
@@ -96,63 +89,4 @@ async fn main() {
         .unwrap();
     tracing::info!("listening on {port}");
     axum::serve(listener, app).await.unwrap();
-}
-
-/// Does a request `Origin` match one configured CORS entry?
-/// - Exact match for plain entries ("https://sub1.ralfjka.sk").
-/// - A single `*` wildcard stands for one-or-more characters, so
-///   "https://*.ralfjka.sk" allows any sub-domain (but not the apex —
-///   list "https://ralfjka.sk" separately if you want it).
-fn origin_allowed(origin: &str, allowed: &str) -> bool {
-    let Some(star) = allowed.find('*') else {
-        return origin == allowed;
-    };
-
-    let prefix = &allowed[..star];
-    let suffix = &allowed[star + 1..];
-
-    match origin.strip_prefix(prefix) {
-        Some(rest) if rest.len() > suffix.len() => rest.ends_with(suffix),
-        _ => false,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::origin_allowed;
-
-    #[test]
-    fn cors_exact_origins() {
-        assert!(origin_allowed("https://sub1.ralfjka.sk", "https://sub1.ralfjka.sk"));
-        assert!(!origin_allowed("https://evil.example", "https://sub1.ralfjka.sk"));
-        assert!(!origin_allowed("https://sub1.ralfjka.sk", "https://sub2.ralfjka.sk"));
-        // scheme must match too
-        assert!(!origin_allowed("http://sub1.ralfjka.sk", "https://sub1.ralfjka.sk"));
-    }
-
-    #[test]
-    fn cors_wildcard_subdomains() {
-        let pattern = "https://*.ralfjka.sk";
-        assert!(origin_allowed("https://sub1.ralfjka.sk", pattern));
-        assert!(origin_allowed("https://a.b.ralfjka.sk", pattern));
-        // apex is NOT matched by "https://*.ralfjka.sk"
-        assert!(!origin_allowed("https://ralfjka.sk", pattern));
-        // different scheme / lookalike domain
-        assert!(!origin_allowed("http://sub1.ralfjka.sk", pattern));
-        assert!(!origin_allowed("https://sub1.example.io", pattern));
-        assert!(!origin_allowed("https://evilralfjka.sk", pattern));
-    }
-
-    #[test]
-    fn cors_comma_list_default() {
-        let origins = "http://localhost:5173, https://sub1.ralfjka.sk ,https://*.ralfjka.sk";
-        let list: Vec<&str> = origins.split(',').map(str::trim).filter(|s| !s.is_empty()).collect();
-        let ok = |o: &str| list.iter().any(|allowed| origin_allowed(o, allowed));
-
-        assert!(ok("http://localhost:5173"));
-        assert!(ok("https://sub1.ralfjka.sk"));
-        assert!(ok("https://anything.ralfjka.sk"));
-        assert!(!ok("https://ralfjka.sk")); // apex not granted by wildcard
-        assert!(!ok("https://danger.com"));
-    }
 }
