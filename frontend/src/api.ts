@@ -3,10 +3,12 @@
 // separate deployment (e.g. Vercel frontend + bare API), set VITE_API_URL.
 const API_URL: string = import.meta.env.VITE_API_URL ?? "";
 
-// Matches the backend's `kind` enum: 'book' was renamed to 'long_text' in
-// migration 002, and 'video' was added.
-export type Kind = "long_text" | "short_text" | "video";
-export type Status = "to_read" | "reading" | "read";
+// Matches the backend's `kind` and `status` enums as serialized by serde.
+// The wire format is the verbatim Rust variant name ("LongText", "ToRead", …).
+// The backend's sqlx::Type rename_all="snake_case" only affects the Postgres
+// enum values ('long_text', 'to_read', …) — never the JSON API.
+export type Kind = "LongText" | "ShortText" | "Video";
+export type Status = "ToRead" | "Reading" | "Read";
 
 export interface EntryListItem {
   id: number;

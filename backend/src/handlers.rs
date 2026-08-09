@@ -20,9 +20,9 @@ pub struct ListParams {
 }
 
 /// GET /api/entries          — all read entries
-/// GET /api/entries?kind=long_text
-/// GET /api/entries?kind=short_text
-/// GET /api/entries?kind=video
+/// GET /api/entries?kind=LongText
+/// GET /api/entries?kind=ShortText
+/// GET /api/entries?kind=Video
 /// Public: only ever returns entries with status = 'read'.
 pub async fn list_entries(
     State(state): State<AppState>,
@@ -95,7 +95,7 @@ pub async fn get_entry(State(state): State<AppState>, Path(id): Path<i32>) -> Re
 
 // ---- Admin ----
 
-/// GET /api/admin/entries?status=to_read
+/// GET /api/admin/entries?status=ToRead
 /// Admin's own reading list / everything, unfiltered by public status rules.
 pub async fn admin_list_entries(
     _admin: AdminUser,

@@ -5,14 +5,14 @@ import { adminGetEntry, createEntry, updateEntry, upsertCommentary } from "../ap
 import type { Kind, Status } from "../api";
 
 const emptyForm = {
-  kind: "long_text" as Kind,
+  kind: "LongText" as Kind,
   title: "",
   author: "",
   language: "",
   year_written: "",
   year_published: "",
   image_url: "",
-  status: "to_read" as Status,
+  status: "ToRead" as Status,
   read_at: "",
   commentary_title: "",
   commentary_body: "",
@@ -101,17 +101,17 @@ export default function AdminEntryFormPage() {
         <div className="field">
           <label htmlFor="kind">Tüüp</label>
           <select id="kind" value={form.kind} onChange={(e) => update("kind", e.target.value as Kind)}>
-            <option value="long_text">Pikk tekst</option>
-            <option value="short_text">Lühitekst</option>
-            <option value="video">Video</option>
+            <option value="LongText">Pikk tekst</option>
+            <option value="ShortText">Lühitekst</option>
+            <option value="Video">Video</option>
           </select>
         </div>
         <div className="field">
           <label htmlFor="status">Staatus</label>
           <select id="status" value={form.status} onChange={(e) => update("status", e.target.value as Status)}>
-            <option value="to_read">Tahan lugeda</option>
-            <option value="reading">Loen praegu</option>
-            <option value="read">Loetud</option>
+            <option value="ToRead">Tahan lugeda</option>
+            <option value="Reading">Loen praegu</option>
+            <option value="Read">Loetud</option>
           </select>
         </div>
       </div>

@@ -5,9 +5,9 @@ import type { Entry, Status } from "../api";
 import { useAdmin } from "../AdminContext";
 
 const STATUS_LABEL: Record<Status, string> = {
-  to_read: "Tahan lugeda",
-  reading: "Loen praegu",
-  read: "Loetud",
+  ToRead: "Tahan lugeda",
+  Reading: "Loen praegu",
+  Read: "Loetud",
 };
 
 export default function AdminDashboardPage() {
@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
 
   if (!entries) return <p className="empty-state">Laen…</p>;
 
-  const grouped: Record<Status, Entry[]> = { to_read: [], reading: [], read: [] };
+  const grouped: Record<Status, Entry[]> = { ToRead: [], Reading: [], Read: [] };
   for (const e of entries) grouped[e.status].push(e);
 
   return (

@@ -29,7 +29,7 @@ export default function Layout() {
       <header className="site-header">
         <div className="container">
           <h1 className="site-title">
-            <Link to="/">loetud</Link>
+            <Link to="/">remark</Link>
           </h1>
           <nav>
             <ul className="tabs">
@@ -40,7 +40,7 @@ export default function Layout() {
               </li>
               <li>
                 <NavLink to="/books" className={({ isActive }) => (isActive ? "active" : "")}>
-                  Raamatud
+                  Pikemad tekstid
                 </NavLink>
               </li>
               <li>
