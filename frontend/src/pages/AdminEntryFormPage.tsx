@@ -5,7 +5,7 @@ import { adminGetEntry, createEntry, updateEntry, upsertCommentary } from "../ap
 import type { Kind, Status } from "../api";
 
 const emptyForm = {
-  kind: "book" as Kind,
+  kind: "long_text" as Kind,
   title: "",
   author: "",
   language: "",
@@ -101,8 +101,9 @@ export default function AdminEntryFormPage() {
         <div className="field">
           <label htmlFor="kind">Tüüp</label>
           <select id="kind" value={form.kind} onChange={(e) => update("kind", e.target.value as Kind)}>
-            <option value="book">Raamat</option>
+            <option value="long_text">Pikk tekst</option>
             <option value="short_text">Lühitekst</option>
+            <option value="video">Video</option>
           </select>
         </div>
         <div className="field">

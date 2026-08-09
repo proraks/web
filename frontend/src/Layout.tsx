@@ -48,6 +48,11 @@ export default function Layout() {
                   Lühitekstid
                 </NavLink>
               </li>
+              <li>
+                <NavLink to="/videos" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Videod
+                </NavLink>
+              </li>
             </ul>
           </nav>
         </div>

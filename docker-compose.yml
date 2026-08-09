@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    # DATABASE_URL, ADMIN_PASSWORD_HASH, SESSION_SECRET, PORT, CORS_ORIGIN
+    env_file: ./backend/.env
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      # If the API is served from a different origin than the site, you can
+      # bake an absolute URL into the bundle instead of relying on the proxy:
+      #   args:
+      #     VITE_API_URL: https://api.example.com
+    environment:
+      # nginx forwards /api/* here; "backend" is the compose service name.
+      BACKEND_UPSTREAM: http://backend:8080
+    depends_on:
+      - backend
+    ports:
+      - "8084:80"
+    restart: unless-stopped

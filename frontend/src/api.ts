@@ -1,6 +1,11 @@
-const API_URL = import.meta.env.VITE_API_URL as string;
+// Empty string = same-origin. In Docker/nginx the static site and /api/ share a
+// host, so the browser talks to nginx which proxies to the backend. For a
+// separate deployment (e.g. Vercel frontend + bare API), set VITE_API_URL.
+const API_URL: string = import.meta.env.VITE_API_URL ?? "";
 
-export type Kind = "book" | "short_text";
+// Matches the backend's `kind` enum: 'book' was renamed to 'long_text' in
+// migration 002, and 'video' was added.
+export type Kind = "long_text" | "short_text" | "video";
 export type Status = "to_read" | "reading" | "read";
 
 export interface EntryListItem {

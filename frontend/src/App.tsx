@@ -11,8 +11,9 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<EntryListPage />} />
-        <Route path="/books" element={<EntryListPage kind="book" />} />
+        <Route path="/books" element={<EntryListPage kind="long_text" />} />
         <Route path="/texts" element={<EntryListPage kind="short_text" />} />
+        <Route path="/videos" element={<EntryListPage kind="video" />} />
         <Route path="/entry/:id" element={<EntryDetailPage />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />

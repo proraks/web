@@ -4,8 +4,9 @@ import { listEntries } from "../api";
 import type { EntryListItem, Kind } from "../api";
 
 const KIND_LABEL: Record<Kind, string> = {
-  book: "raamat",
+  long_text: "raamat",
   short_text: "lühitekst",
+  video: "video",
 };
 
 export default function EntryListPage({ kind }: { kind?: Kind }) {

@@ -20,8 +20,9 @@ pub struct ListParams {
 }
 
 /// GET /api/entries          — all read entries
-/// GET /api/entries?kind=book
+/// GET /api/entries?kind=long_text
 /// GET /api/entries?kind=short_text
+/// GET /api/entries?kind=video
 /// Public: only ever returns entries with status = 'read'.
 pub async fn list_entries(
     State(state): State<AppState>,
@@ -122,6 +123,37 @@ pub async fn admin_list_entries(
         Ok(rows) => Json(rows).into_response(),
         Err(e) => err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }
+}
+
+/// GET /api/admin/entries/:id
+/// Admin variant of the public detail endpoint: returns *any* entry regardless
+/// of its public status (so drafts / to-read items can be edited), plus the
+/// commentary even when it isn't published yet.
+pub async fn admin_get_entry(
+    _admin: AdminUser,
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Response {
+    let entry = sqlx::query_as::<_, Entry>("SELECT * FROM entries WHERE id = $1")
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await;
+
+    let entry = match entry {
+        Ok(Some(e)) => e,
+        Ok(None) => return err(StatusCode::NOT_FOUND, "not found"),
+        Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    };
+
+    // Note: unlike the public endpoint, no is_published filter here - the admin
+    // form needs to pre-fill draft commentary too.
+    let commentary = sqlx::query_as::<_, Commentary>("SELECT * FROM commentaries WHERE entry_id = $1")
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+        .unwrap_or(None);
+
+    Json(EntryDetail { entry, commentary }).into_response()
 }
 
 /// POST /api/admin/entries

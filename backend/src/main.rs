@@ -28,6 +28,15 @@ async fn main() {
     let session_secret = std::env::var("SESSION_SECRET").expect("SESSION_SECRET must be set");
     let port = std::env::var("PORT").unwrap_or_else(|_| "8080".into());
 
+    // Which origin the frontend is served from. Keep in sync with the frontend's
+    // VITE_API_URL when it points at this API directly; when running behind the
+    // nginx proxy (see frontend/Dockerfile) the browser never cross-origin-calls
+    // this API and this doesn't matter.
+    let cors_origin = std::env::var("CORS_ORIGIN")
+        .unwrap_or_else(|_| "http://localhost:5173".into())
+        .parse::<axum::http::HeaderValue>()
+        .unwrap_or_else(|_| axum::http::HeaderValue::from_static("http://localhost:5173"));
+
     let pool = db::connect(&database_url)
         .await
         .expect("failed to connect to database");
@@ -40,11 +49,7 @@ async fn main() {
 
     // Loosen this once the frontend's real Vercel domain is known.
     let cors = CorsLayer::new()
-        .allow_origin(
-            "http://localhost:5173"
-                .parse::<axum::http::HeaderValue>()
-                .unwrap(),
-        )
+        .allow_origin(cors_origin)
         .allow_methods([
             axum::http::Method::GET,
             axum::http::Method::POST,
@@ -63,6 +68,7 @@ async fn main() {
         .route("/api/entries", get(handlers::list_entries))
         .route("/api/entries/:id", get(handlers::get_entry))
         .route("/api/admin/entries", get(handlers::admin_list_entries))
+        .route("/api/admin/entries/:id", get(handlers::admin_get_entry))
         .route("/api/admin/entries", post(handlers::create_entry))
         .route("/api/admin/entries/:id", patch(handlers::update_entry))
         .route(
