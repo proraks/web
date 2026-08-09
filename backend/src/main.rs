@@ -40,7 +40,11 @@ async fn main() {
 
     // Loosen this once the frontend's real Vercel domain is known.
     let cors = CorsLayer::new()
-        .allow_origin("http://localhost:5173".parse::<axum::http::HeaderValue>().unwrap())
+        .allow_origin(
+            "http://localhost:5173"
+                .parse::<axum::http::HeaderValue>()
+                .unwrap(),
+        )
         .allow_methods([
             axum::http::Method::GET,
             axum::http::Method::POST,
@@ -67,7 +71,7 @@ async fn main() {
         .layer(cors)
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
+    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{port}"))
         .await
         .unwrap();
     tracing::info!("listening on {port}");
