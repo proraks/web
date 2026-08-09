@@ -4,7 +4,7 @@ mod handlers;
 mod models;
 
 use axum::{
-    http::{request::Parts, HeaderValue},
+    http::HeaderValue,
     routing::{get, patch, post, put},
     Router,
 };
@@ -54,7 +54,10 @@ async fn main() {
             axum::http::Method::DELETE,
             axum::http::Method::OPTIONS,
         ])
-        .allow_headers([axum::http::header::CONTENT_TYPE])
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+        ])
         .allow_credentials(true);
 
     let pool = db::connect(&database_url)

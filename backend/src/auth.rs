@@ -12,8 +12,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::AppState;
 
 const SESSION_TTL_SECS: u64 = 60 * 60 * 24 * 7; // 7 days
-const COOKIE_NAME: &str = "session";
-
 type HmacSha256 = Hmac<Sha256>;
 
 /// Builds a signed session token: "<expiry_unix_ts>.<hex hmac>"
@@ -72,30 +70,24 @@ pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>
         + SESSION_TTL_SECS;
     let token = sign_token(&state.session_secret, expiry);
 
-    let cookie = format!(
-        "{COOKIE_NAME}={token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age={SESSION_TTL_SECS}"
-    );
-
+    // Token auth (Authorization header, no cookie) so it also works cross-site:
+    // e.g. a frontend on vercel.app calling an API on outplane.app.
     (
         StatusCode::OK,
-        [(header::SET_COOKIE, cookie)],
-        Json(serde_json::json!({ "message": "logged in" })),
+        Json(serde_json::json!({ "token": token, "expires_at": expiry })),
     )
         .into_response()
 }
 
+/// Optional - the frontend just discards its stored token; there is nothing to
+/// revoke server-side for a stateless signed token.
 pub async fn logout() -> Response {
-    let cookie = format!("{COOKIE_NAME}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0");
-    (
-        StatusCode::OK,
-        [(header::SET_COOKIE, cookie)],
-        Json(serde_json::json!({ "message": "logged out" })),
-    )
-        .into_response()
+    (StatusCode::OK, Json(serde_json::json!({ "message": "logged out" }))).into_response()
 }
 
 /// Axum extractor: put this as a handler argument to require a valid admin session.
 /// e.g. `async fn admin_handler(_admin: AdminUser, State(state): State<AppState>) -> ...`
+/// The token is sent as `Authorization: Bearer <token>` (no cookies).
 pub struct AdminUser;
 
 #[axum::async_trait]
@@ -106,16 +98,15 @@ impl FromRequestParts<AppState> for AdminUser {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let cookie_header = parts
+        let token = parts
             .headers
-            .get(header::COOKIE)
+            .get(header::AUTHORIZATION)
             .and_then(|v| v.to_str().ok())
-            .unwrap_or("");
-
-        let token = cookie_header
-            .split(';')
-            .map(|c| c.trim())
-            .find_map(|c| c.strip_prefix(&format!("{COOKIE_NAME}=")));
+            .and_then(|v| v.split_once(' '))
+            .filter(|(scheme, token)| {
+                scheme.eq_ignore_ascii_case("Bearer") && !token.trim().is_empty()
+            })
+            .map(|(_, token)| token.trim());
 
         match token {
             Some(t) if verify_token(&state.session_secret, t) => Ok(AdminUser),

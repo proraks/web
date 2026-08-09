@@ -9,12 +9,12 @@ interface AdminContextValue {
 const AdminContext = createContext<AdminContextValue | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  // Note: this resets to false on every page reload since the session cookie is
-  // httpOnly (deliberately unreadable from JS). Admin pages re-check against the
-  // API on load and flip this back to true if the cookie's still valid - see
-  // AdminDashboardPage. That's fine at this project's scale; a page refresh just
-  // means a brief "checking..." flash before the admin bar reappears.
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Restore the admin bar on reload if a (possibly still valid) token exists.
+  // Admin pages additionally re-check the token against the API on load and
+  // flip this back off if it expired - see AdminDashboardPage.
+  const [isAdmin, setIsAdmin] = useState<boolean>(() =>
+    Boolean(sessionStorage.getItem("auth_token")),
+  );
   return <AdminContext.Provider value={{ isAdmin, setIsAdmin }}>{children}</AdminContext.Provider>;
 }
 

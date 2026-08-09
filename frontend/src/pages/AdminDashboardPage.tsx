@@ -18,7 +18,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     adminListEntries()
       .then((data) => {
-        setIsAdmin(true); // cookie's still valid - this also handles the post-refresh re-sync
+        setIsAdmin(true); // token accepted - also handles the post-refresh re-sync
         setEntries(data);
       })
       .catch(() => {

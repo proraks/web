@@ -3,6 +3,16 @@
 // separate deployment (e.g. Vercel frontend + bare API), set VITE_API_URL.
 const API_URL: string = import.meta.env.VITE_API_URL ?? "";
 
+// Admin session token, kept in sessionStorage (auto-cleared when the tab closes)
+// and sent as `Authorization: Bearer <token>` on every request. Works cross-site,
+// unlike cookies (SameSite/third-party blocking).
+const TOKEN_KEY = "auth_token";
+
+function authHeaders(): Record<string, string> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 // Matches the backend's `kind` and `status` enums as serialized by serde.
 // The wire format is the verbatim Rust variant name ("LongText", "ToRead", …).
 // The backend's sqlx::Type rename_all="snake_case" only affects the Postgres
@@ -53,9 +63,9 @@ export interface EntryDetail extends Entry {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: "include", // sends the admin session cookie
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders(),
       ...options.headers,
     },
   });
@@ -86,11 +96,21 @@ export function getEntry(id: number): Promise<EntryDetail> {
 
 // ---- Admin ----
 
-export function login(password: string): Promise<void> {
-  return request("/api/login", { method: "POST", body: JSON.stringify({ password }) });
+export interface LoginResponse {
+  token: string;
+  expires_at?: number;
+}
+
+export async function login(password: string): Promise<void> {
+  const res = await request<LoginResponse>("/api/login", {
+    method: "POST",
+    body: JSON.stringify({ password }),
+  });
+  sessionStorage.setItem(TOKEN_KEY, res.token);
 }
 
 export function logout(): Promise<void> {
+  sessionStorage.removeItem(TOKEN_KEY);
   return request("/api/logout", { method: "POST" });
 }
 
