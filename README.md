@@ -17,6 +17,12 @@ Initialize the MySQL database using the initial schema:
 mysql -h <host> -u <user> -p <db_name> < backend/migrations/001_init.sql
 ```
 
+Or for PostgreSQL:
+
+```bash
+psql -h <host> -U <user> -d <db_name> -f backend/migrations/001_init.sql
+```
+
 ### 2. Backend Configuration
 
 1. Navigate to `/backend`.

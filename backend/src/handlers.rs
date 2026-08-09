@@ -33,7 +33,7 @@ pub async fn list_entries(
                        (c.id IS NOT NULL AND c.is_published = TRUE) AS has_commentary
                 FROM entries e
                 LEFT JOIN commentaries c ON c.entry_id = e.id
-                WHERE e.status = 'read' AND e.kind = ?
+                WHERE e.status = 'read' AND e.kind = $1::kind
                 ORDER BY e.read_at DESC, e.created_at DESC
                 "#,
             )
@@ -67,7 +67,7 @@ pub async fn list_entries(
 /// Public: 404s if the entry isn't published/read, so unread admin drafts stay hidden.
 pub async fn get_entry(State(state): State<AppState>, Path(id): Path<i32>) -> Response {
     let entry = sqlx::query_as::<_, Entry>(
-        "SELECT * FROM entries WHERE id = ? AND status = 'read'",
+        "SELECT * FROM entries WHERE id = $1 AND status = 'read'",
     )
     .bind(id)
     .fetch_optional(&state.db)
@@ -80,7 +80,7 @@ pub async fn get_entry(State(state): State<AppState>, Path(id): Path<i32>) -> Re
     };
 
     let commentary = sqlx::query_as::<_, Commentary>(
-        "SELECT * FROM commentaries WHERE entry_id = ? AND is_published = TRUE",
+        "SELECT * FROM commentaries WHERE entry_id = $1 AND is_published = TRUE",
     )
     .bind(id)
     .fetch_optional(&state.db)
@@ -102,10 +102,12 @@ pub async fn admin_list_entries(
     let status = params.get("status");
     let rows = match status {
         Some(s) => {
-            sqlx::query_as::<_, Entry>("SELECT * FROM entries WHERE status = ? ORDER BY created_at DESC")
-                .bind(s)
-                .fetch_all(&state.db)
-                .await
+            sqlx::query_as::<_, Entry>(
+                "SELECT * FROM entries WHERE status = $1::status ORDER BY created_at DESC",
+            )
+            .bind(s)
+            .fetch_all(&state.db)
+            .await
         }
         None => {
             sqlx::query_as::<_, Entry>("SELECT * FROM entries ORDER BY created_at DESC")
@@ -127,10 +129,11 @@ pub async fn create_entry(
     Json(body): Json<NewEntry>,
 ) -> Response {
     let status = body.status.unwrap_or(Status::ToRead);
-    let result = sqlx::query(
+    let result = sqlx::query_scalar::<_, i32>(
         r#"
         INSERT INTO entries (kind, title, author, language, year_written, year_published, image_url, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
         "#,
     )
     .bind(&body.kind)
@@ -141,11 +144,11 @@ pub async fn create_entry(
     .bind(body.year_published)
     .bind(&body.image_url)
     .bind(&status)
-    .execute(&state.db)
+    .fetch_one(&state.db)
     .await;
 
     match result {
-        Ok(res) => Json(serde_json::json!({ "id": res.last_insert_id() })).into_response(),
+        Ok(id) => Json(serde_json::json!({ "id": id })).into_response(),
         Err(e) => err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }
 }
@@ -159,7 +162,7 @@ pub async fn update_entry(
     Path(id): Path<i32>,
     Json(body): Json<UpdateEntry>,
 ) -> Response {
-    let existing = sqlx::query_as::<_, Entry>("SELECT * FROM entries WHERE id = ?")
+    let existing = sqlx::query_as::<_, Entry>("SELECT * FROM entries WHERE id = $1")
         .bind(id)
         .fetch_optional(&state.db)
         .await;
@@ -182,9 +185,9 @@ pub async fn update_entry(
     let result = sqlx::query(
         r#"
         UPDATE entries
-        SET title = ?, author = ?, language = ?, year_written = ?, year_published = ?,
-            image_url = ?, status = ?, read_at = ?
-        WHERE id = ?
+        SET title = $1, author = $2, language = $3, year_written = $4, year_published = $5,
+            image_url = $6, status = $7, read_at = $8, edited_at = NOW()
+        WHERE id = $9
         "#,
     )
     .bind(title)
@@ -216,11 +219,12 @@ pub async fn upsert_commentary(
     let result = sqlx::query(
         r#"
         INSERT INTO commentaries (entry_id, title, body, is_published)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            title = VALUES(title),
-            body = VALUES(body),
-            is_published = VALUES(is_published)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (entry_id) DO UPDATE SET
+            title = EXCLUDED.title,
+            body = EXCLUDED.body,
+            is_published = EXCLUDED.is_published,
+            edited_at = NOW()
         "#,
     )
     .bind(id)

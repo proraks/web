@@ -7,12 +7,12 @@ use axum::{
     routing::{get, patch, post, put},
     Router,
 };
-use sqlx::mysql::MySqlPool;
-use tower_http::cors::{Any, CorsLayer};
+use sqlx::postgres::PgPool;
+use tower_http::cors::CorsLayer;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: MySqlPool,
+    pub db: PgPool,
     pub admin_password_hash: String,
     pub session_secret: String,
 }
@@ -57,6 +57,7 @@ async fn main() {
         .allow_credentials(true);
 
     let app = Router::new()
+        .route("/health", get(|| async { "OK" }))
         .route("/api/login", post(auth::login))
         .route("/api/logout", post(auth::logout))
         .route("/api/entries", get(handlers::list_entries))
