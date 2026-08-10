@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getEntry } from "../api";
 import type { EntryDetail } from "../api";
 import { flagFor } from "../languages";
+import { ratingLabelEt } from "../ratings";
 
 export default function EntryDetailPage() {
   const { id } = useParams();
@@ -39,9 +40,16 @@ export default function EntryDetailPage() {
               <div key={i}>{line}</div>
             ))}
             {rating && (
-              <div aria-label={`Hinnang ${rating} / 5`} title={`${rating} / 5`}>
-                {"★★★★★".slice(0, rating)}
-                <span style={{ color: "var(--ink-soft)" }}>{"★★★★★".slice(rating)}</span>
+              <div
+                aria-label={`Hinnang ${rating} / 5 — ${ratingLabelEt(rating)}`}
+                title={`${rating} / 5`}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+              >
+                <span style={{ fontSize: 18, letterSpacing: 1 }}>
+                  <span style={{ color: "var(--accent)" }}>{"★".repeat(rating)}</span>
+                  <span style={{ color: "var(--ink-soft)" }}>{"★".repeat(5 - rating)}</span>
+                </span>
+                <span style={{ color: "var(--ink-soft)", fontSize: "0.85em" }}>{ratingLabelEt(rating)}</span>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { listEntries } from "../api";
 import type { EntryListItem, Kind } from "../api";
 import { flagFor } from "../languages";
+import { ratingLabelEt } from "../ratings";
 
 const PAGE_SIZE = 20;
 
@@ -71,7 +72,7 @@ export default function EntryListPage({ kind }: { kind?: Kind }) {
       );
     }
     return (
-      <span aria-label={`Hinnang ${rating} / 5`} title={`${rating} / 5`}>
+            <span aria-label={`Hinnang ${rating} / 5 — ${ratingLabelEt(rating)}`} title={`${rating} / 5 — ${ratingLabelEt(rating)}`}>
         <span style={{ color: "var(--accent)" }}>{"★★★★★".slice(0, rating)}</span>
         <span style={{ color: "var(--ink-soft)", opacity: 0.45 }}>{"★★★★★".slice(rating)}</span>
       </span>

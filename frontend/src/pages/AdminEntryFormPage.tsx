@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { adminGetEntry, createEntry, updateEntry, upsertCommentary } from "../api";
 import type { Kind, Status } from "../api";
 import { LANGUAGES } from "../languages";
+import { RATING_LABELS_ET } from "../ratings";
 
 const emptyForm = {
   kind: "Book" as Kind,
@@ -250,14 +251,14 @@ export default function AdminEntryFormPage() {
         <div className="field" style={{ maxWidth: 180 }}>
           <label htmlFor="rating">Hinnang</label>
           <select id="rating" value={form.rating} onChange={(e) => update("rating", e.target.value)} required>
-            <option value="" disabled>
+                        <option value="" disabled>
               Vali
             </option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
+            <option value="1">1 — {RATING_LABELS_ET[1]}</option>
+            <option value="2">2 — {RATING_LABELS_ET[2]}</option>
+            <option value="3">3 — {RATING_LABELS_ET[3]}</option>
+            <option value="4">4 — {RATING_LABELS_ET[4]}</option>
+            <option value="5">5 — {RATING_LABELS_ET[5]}</option>
           </select>
         </div>
       )}
