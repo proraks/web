@@ -82,7 +82,11 @@ pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>
 /// Optional - the frontend just discards its stored token; there is nothing to
 /// revoke server-side for a stateless signed token.
 pub async fn logout() -> Response {
-    (StatusCode::OK, Json(serde_json::json!({ "message": "logged out" }))).into_response()
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({ "message": "logged out" })),
+    )
+        .into_response()
 }
 
 /// Axum extractor: put this as a handler argument to require a valid admin session.

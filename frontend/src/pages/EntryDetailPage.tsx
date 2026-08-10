@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getEntry } from "../api";
 import type { EntryDetail } from "../api";
+import { flagFor } from "../languages";
 
 export default function EntryDetailPage() {
   const { id } = useParams();
@@ -20,10 +21,10 @@ export default function EntryDetailPage() {
 
   const metaLines = [
     entry.author,
-    entry.language,
-    [entry.year_written, entry.year_published].filter(Boolean).join(" / "),
-    entry.read_at && `loetud: ${entry.read_at}`,
+    entry.language ? flagFor(entry.language) : null,
+    entry.completed_at && `loetud: ${entry.completed_at}`,
   ].filter(Boolean);
+  const rating = entry.kind === "Book" ? entry.rating : null;
 
   return (
     <>
@@ -31,13 +32,18 @@ export default function EntryDetailPage() {
         ← tagasi
       </Link>
       <div className="entry-detail-header">
-        {entry.image_url && <img src={entry.image_url} alt="" className="entry-cover" />}
         <div>
           <h2 className="entry-detail-title">{entry.title}</h2>
           <div className="entry-detail-meta">
             {metaLines.map((line, i) => (
               <div key={i}>{line}</div>
             ))}
+            {rating && (
+              <div aria-label={`Hinnang ${rating} / 5`} title={`${rating} / 5`}>
+                {"★★★★★".slice(0, rating)}
+                <span style={{ color: "var(--ink-soft)" }}>{"★★★★★".slice(rating)}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

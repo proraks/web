@@ -20,7 +20,9 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() {
+    // Allow running from either the backend directory or the repo root.
     dotenvy::dotenv().ok();
+    dotenvy::from_filename("backend/.env").ok();
     tracing_subscriber::fmt::init();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -45,7 +47,7 @@ async fn main() {
         .collect();
 
     let cors = CorsLayer::new()
-        .allow_origin(AllowOrigin::list(cors_origins))  // Use list instead of predicate
+        .allow_origin(AllowOrigin::list(cors_origins)) // Use list instead of predicate
         .allow_methods([
             axum::http::Method::GET,
             axum::http::Method::POST,

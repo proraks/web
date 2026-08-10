@@ -11,9 +11,10 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<EntryListPage />} />
-        <Route path="/books" element={<EntryListPage kind="LongText" />} />
+        <Route path="/books" element={<EntryListPage kind="Book" />} />
         <Route path="/texts" element={<EntryListPage kind="ShortText" />} />
-        <Route path="/videos" element={<EntryListPage kind="Video" />} />
+        <Route path="/articles" element={<EntryListPage kind="Article" />} />
+        <Route path="/media" element={<EntryListPage kind="Media" />} />
         <Route path="/entry/:id" element={<EntryDetailPage />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />

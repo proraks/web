@@ -43,22 +43,22 @@ button {
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 32px;
 }
 
 /* ---- Header / tabs ---- */
 
 .site-header {
-  padding: 40px 0 0;
+  padding: 48px 0 0;
   border-bottom: 1px solid var(--line);
 }
 
 .site-title {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 24px;
+  font-family: "Baskerville", "Palatino Linotype", "Apple Chancery", "Snell Roundhand", "Segoe Script", cursive;
+  font-size: 33px;
+  font-weight: 500;
+  letter-spacing: 0;
+  margin: 0 0 32px;
 }
 
 .site-title a {
@@ -68,15 +68,22 @@ button {
 
 .tabs {
   display: flex;
-  gap: 24px;
+  gap: 32px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: nowrap;
+}
+
 .tabs a {
   display: inline-block;
-  padding: 0 0 12px;
+  padding: 0 0 16px;
   text-decoration: none;
   font-size: 14px;
   letter-spacing: 0.02em;
@@ -90,8 +97,81 @@ button {
   border-bottom-color: var(--accent);
 }
 
+.header-search {
+  margin-left: auto;
+  flex: 0 0 172px;
+  width: 172px;
+}
+
+.header-search-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 0 16px;
+  color: var(--ink-soft);
+}
+
+.header-search-icon {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  margin-top: 1px;
+}
+
+.header-search-icon::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  border: 1.75px solid var(--ink-soft);
+  border-radius: 50%;
+}
+
+.header-search-icon::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  width: 5px;
+  height: 1.75px;
+  background: var(--ink-soft);
+  transform: rotate(45deg);
+  transform-origin: right center;
+}
+
+.header-search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0;
+  margin: 0;
+}
+
+.header-search-input::placeholder {
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.header-search-label:focus-within {
+  border-bottom-color: var(--accent);
+}
+
 main {
-  padding: 32px 0 80px;
+  padding: 48px 0 96px;
 }
 
 /* ---- Entry list: a tight index, not a card grid ---- */
@@ -328,4 +408,36 @@ main {
   color: #a33;
   font-size: 14px;
   margin: 8px 0;
+}
+
+.sort-icon {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-left: 4px;
+}
+
+table {
+  border-spacing: 0;
+  margin-top: 8px;
+}
+
+th {
+  padding: 16px 12px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+th:hover {
+  background: var(--accent-soft);
+}
+
+td {
+  padding: 18px 12px;
+}
+
+td a:hover {
+  text-decoration: underline;
 }

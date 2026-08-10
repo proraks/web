@@ -14,11 +14,11 @@ function authHeaders(): Record<string, string> {
 }
 
 // Matches the backend's `kind` and `status` enums as serialized by serde.
-// The wire format is the verbatim Rust variant name ("LongText", "ToRead", …).
+// The wire format is the verbatim Rust variant name ("Book", "Tbr", …).
 // The backend's sqlx::Type rename_all="snake_case" only affects the Postgres
-// enum values ('long_text', 'to_read', …) — never the JSON API.
-export type Kind = "LongText" | "ShortText" | "Video";
-export type Status = "ToRead" | "Reading" | "Read";
+// enum values ('book', 'tbr', …) — never the JSON API.
+export type Kind = "Book" | "ShortText" | "Article" | "Media";
+export type Status = "Tbr" | "InProgress" | "Completed";
 
 export interface EntryListItem {
   id: number;
@@ -26,9 +26,34 @@ export interface EntryListItem {
   title: string;
   author: string | null;
   language: string | null;
-  year_published: number | null;
-  read_at: string | null;
+  completed_at: string | null;
   has_commentary: boolean;
+  journal: string | null;
+  article_url: string | null;
+  media_url: string | null;
+  rating: number | null;
+}
+
+export interface EntryListResponse {
+  items: EntryListItem[];
+  has_more: boolean;
+}
+
+export interface AdminEntryListItem {
+  id: number;
+  kind: Kind;
+  title: string;
+  author: string | null;
+  language: string | null;
+  status: Status;
+  completed_at: string | null;
+  has_commentary: boolean;
+  rating: number | null;
+}
+
+export interface AdminEntryListResponse {
+  items: AdminEntryListItem[];
+  has_more: boolean;
 }
 
 export interface Entry {
@@ -37,13 +62,25 @@ export interface Entry {
   title: string;
   author: string | null;
   language: string | null;
-  year_written: number | null;
-  year_published: number | null;
-  image_url: string | null;
   status: Status;
-  read_at: string | null;
+  completed_at: string | null;
   created_at: string;
   edited_at: string;
+  // Book
+  isbn: string | null;
+  pages: number | null;
+  publisher: string | null;
+  rating?: number | null;
+  // ShortText
+  doi: string | null;
+  short_text_url: string | null;
+  // Article
+  journal: string | null;
+  issue: string | null;
+  article_url: string | null;
+  // Media
+  media_subtype: "Video" | "Audio" | null;
+  media_url: string | null;
 }
 
 export interface Commentary {
@@ -77,7 +114,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       // response wasn't JSON, keep the generic message
     }
-    throw new Error(message);
+    const error = new Error(message) as Error & { status?: number };
+    error.status = res.status;
+    throw error;
   }
   if (res.status === 204) return undefined as T;
   return res.json();
@@ -85,9 +124,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 // ---- Public ----
 
-export function listEntries(kind?: Kind): Promise<EntryListItem[]> {
-  const qs = kind ? `?kind=${kind}` : "";
-  return request(`/api/entries${qs}`);
+export function listEntries(params: {
+  kind?: Kind;
+  q?: string;
+  limit?: number;
+  offset?: number;
+} = {}): Promise<EntryListResponse> {
+  const search = new URLSearchParams();
+  if (params.kind) search.set("kind", params.kind);
+  if (params.q) search.set("q", params.q);
+  if (typeof params.limit === "number") search.set("limit", String(params.limit));
+  if (typeof params.offset === "number") search.set("offset", String(params.offset));
+  const qs = search.toString();
+  return request(`/api/entries${qs ? `?${qs}` : ""}`);
 }
 
 export function getEntry(id: number): Promise<EntryDetail> {
@@ -118,9 +167,23 @@ export function adminGetEntry(id: number): Promise<EntryDetail> {
   return request(`/api/admin/entries/${id}`);
 }
 
-export function adminListEntries(status?: Status): Promise<Entry[]> {
-  const qs = status ? `?status=${status}` : "";
-  return request(`/api/admin/entries${qs}`);
+export function adminListEntries(params: {
+  status?: Status;
+  kind?: Kind;
+  sort?: string;
+  order?: string;
+  limit?: number;
+  offset?: number;
+} = {}): Promise<AdminEntryListResponse> {
+  const search = new URLSearchParams();
+  if (params.status) search.set("status", params.status);
+  if (params.kind) search.set("kind", params.kind);
+  if (params.sort) search.set("sort", params.sort);
+  if (params.order) search.set("order", params.order);
+  if (typeof params.limit === "number") search.set("limit", String(params.limit));
+  if (typeof params.offset === "number") search.set("offset", String(params.offset));
+  const qs = search.toString();
+  return request(`/api/admin/entries${qs ? `?${qs}` : ""}`);
 }
 
 export interface NewEntryInput {
@@ -128,17 +191,28 @@ export interface NewEntryInput {
   title: string;
   author?: string;
   language?: string;
-  year_written?: number;
-  year_published?: number;
-  image_url?: string;
   status?: Status;
+  // Book
+  isbn?: string;
+  pages?: number;
+  publisher?: string;
+  // ShortText
+  doi?: string;
+  short_text_url?: string;
+  // Article
+  journal?: string;
+  issue?: string;
+  article_url?: string;
+  // Media
+  media_subtype?: "Video" | "Audio";
+  media_url?: string;
 }
 
 export function createEntry(input: NewEntryInput): Promise<{ id: number }> {
   return request("/api/admin/entries", { method: "POST", body: JSON.stringify(input) });
 }
 
-export function updateEntry(id: number, input: Partial<NewEntryInput> & { read_at?: string }) {
+export function updateEntry(id: number, input: Partial<NewEntryInput> & { completed_at?: string }) {
   return request(`/api/admin/entries/${id}`, { method: "PATCH", body: JSON.stringify(input) });
 }
 
