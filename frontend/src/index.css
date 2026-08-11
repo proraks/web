@@ -441,3 +441,102 @@ td {
 td a:hover {
   text-decoration: underline;
 }
+
+/* ---- Mobile responsiveness ---- */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .site-header {
+    padding: 32px 0 0;
+  }
+
+  .site-title {
+    font-size: 26px;
+    margin: 0 0 24px;
+  }
+
+  .header-nav {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .tabs {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tabs a {
+    padding: 0 0 12px;
+    font-size: 13px;
+  }
+
+  .header-search {
+    width: 140px;
+    flex: 0 0 140px;
+  }
+
+  .header-search-label {
+    padding: 0 0 12px;
+  }
+
+  .header-search-input {
+    font-size: 13px;
+  }
+
+  main {
+    padding: 32px 0 64px;
+  }
+
+  .entry-detail-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .entry-detail-title {
+    font-size: 24px;
+  }
+
+  .entry-detail-meta {
+    font-size: 13px;
+  }
+
+  .commentary {
+    font-size: 16px;
+  }
+
+  .field-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  th {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 14px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    gap: 12px;
+  }
+
+  .tabs a {
+    font-size: 12px;
+  }
+
+  .header-search {
+    width: 120px;
+    flex: 0 0 120px;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+}
